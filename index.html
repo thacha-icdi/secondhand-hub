@@ -144,7 +144,7 @@
     <a href="#home">หน้าแรก</a>
     <a href="#products">สินค้า</a>
     <a href="#register">สมัครสมาชิก</a>
-    <a href="#">เข้าสู่ระบบ</a>
+    <a href="#login">เข้าสู่ระบบ</a>
     <a href="#">ขายสินค้า</a>
     <a href="#">ติดต่อเรา</a>
 </nav>
@@ -320,7 +320,61 @@
     </div>
 
 </section>
+<section class="registration" id="login">
 
+    <h2>🔐 เข้าสู่ระบบ</h2>
+
+    <form id="loginForm">
+
+        <label>อีเมล</label>
+        <input
+            type="email"
+            id="loginEmail"
+            placeholder="example@email.com"
+            required
+        >
+
+        <label>รหัสผ่าน</label>
+        <input
+            type="password"
+            id="loginPassword"
+            placeholder="กรอกรหัสผ่าน"
+            required
+        >
+
+        <label>เข้าสู่ระบบในฐานะ</label>
+
+        <select id="loginType" required>
+
+            <option value="">
+                -- เลือกประเภทสมาชิก --
+            </option>
+
+            <option value="buyer">
+                🛒 ผู้ซื้อ
+            </option>
+
+            <option value="seller">
+                🏪 ผู้ขาย
+            </option>
+
+        </select>
+
+        <button
+            type="submit"
+            class="register-button"
+        >
+            เข้าสู่ระบบ
+        </button>
+
+    </form>
+
+    <div class="login">
+        ยังไม่มีบัญชี?
+        <a href="#register">สมัครสมาชิก</a>
+    </div>
+
+</section>
 
 <footer>
 
@@ -385,7 +439,37 @@ document
     .reset();
 
 });
+document
+.getElementById("loginForm")
+.addEventListener("submit", function(event) {
 
+    event.preventDefault();
+
+    const email =
+        document.getElementById("loginEmail").value;
+
+    const userType =
+        document.getElementById("loginType").value;
+
+    if (userType === "buyer") {
+
+        alert(
+            "เข้าสู่ระบบสำเร็จ\n" +
+            "ยินดีต้อนรับผู้ซื้อ\n" +
+            email
+        );
+
+    } else if (userType === "seller") {
+
+        alert(
+            "เข้าสู่ระบบสำเร็จ\n" +
+            "ยินดีต้อนรับผู้ขาย\n" +
+            email
+        );
+
+    }
+
+});
 </script>
 
 
