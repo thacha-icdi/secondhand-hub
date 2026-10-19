@@ -7,6 +7,10 @@
     <title>My Secondhand</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -16,25 +20,30 @@
         header {
             background: #2c3e50;
             color: white;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
         }
 
         nav {
             background: #34495e;
-            padding: 12px;
+            padding: 14px;
             text-align: center;
         }
 
         nav a {
             color: white;
-            margin: 20px;
+            margin: 15px;
             text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            color: #2ecc71;
         }
 
         .welcome {
             text-align: center;
-            padding: 40px;
+            padding: 40px 20px;
         }
 
         .products {
@@ -46,18 +55,11 @@
 
         .product {
             background: white;
-            width: 220px;
+            width: 240px;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 2px 8px #ccc;
             text-align: center;
-        }
-
-        .product img {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
         }
 
         .price {
@@ -71,12 +73,62 @@
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
         }
 
         button:hover {
             background: #219150;
+        }
+
+        /* Registration */
+
+        .registration {
+            background: white;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px #ccc;
+        }
+
+        .registration h2 {
+            text-align: center;
+        }
+
+        .registration label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .registration input,
+        .registration select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .register-button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 13px;
+            font-size: 16px;
+        }
+
+        .login {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
         }
     </style>
 </head>
@@ -89,42 +141,253 @@
 </header>
 
 <nav>
-    <a href="#">หน้าแรก</a>
-    <a href="#">สินค้า</a>
+    <a href="#home">หน้าแรก</a>
+    <a href="#products">สินค้า</a>
+    <a href="#register">สมัครสมาชิก</a>
+    <a href="#">เข้าสู่ระบบ</a>
     <a href="#">ขายสินค้า</a>
     <a href="#">ติดต่อเรา</a>
 </nav>
 
-<section class="welcome">
+
+<section class="welcome" id="home">
+
+    <h2>ยินดีต้อนรับสู่ My Secondhand</h2>
+
+    <p>
+        ซื้อและขายสินค้ามือสองได้ง่าย ๆ
+        สมัครสมาชิกเพื่อเริ่มต้นใช้งาน
+    </p>
+
+</section>
+
+
+<section class="welcome" id="products">
 
     <h2>สินค้ามือสองแนะนำ</h2>
 
     <div class="products">
 
         <div class="product">
-            <h3>iPhone 13</h3>
+
+            <h3>📱 iPhone 13</h3>
+
             <p>สภาพดี ใช้งานปกติ</p>
-            <p class="price">฿12,900</p>
-            <button>ดูสินค้า</button>
+
+            <p class="price">
+                ฿12,900
+            </p>
+
+            <button>
+                ดูสินค้า
+            </button>
+
         </div>
 
+
         <div class="product">
-            <h3>MacBook Air</h3>
+
+            <h3>💻 MacBook Air</h3>
+
             <p>สภาพสวย พร้อมใช้งาน</p>
-            <p class="price">฿19,900</p>
-            <button>ดูสินค้า</button>
+
+            <p class="price">
+                ฿19,900
+            </p>
+
+            <button>
+                ดูสินค้า
+            </button>
+
         </div>
 
+
         <div class="product">
-            <h3>จักรยาน</h3>
+
+            <h3>🚲 จักรยาน</h3>
+
             <p>มือสอง สภาพดี</p>
-            <p class="price">฿3,500</p>
-            <button>ดูสินค้า</button>
+
+            <p class="price">
+                ฿3,500
+            </p>
+
+            <button>
+                ดูสินค้า
+            </button>
+
         </div>
 
     </div>
 
 </section>
+
+
+<section class="registration" id="register">
+
+    <h2>สมัครสมาชิก</h2>
+
+    <form id="registerForm">
+
+        <label>ประเภทสมาชิก</label>
+
+        <select id="userType" required>
+
+            <option value="">
+                -- เลือกประเภทสมาชิก --
+            </option>
+
+            <option value="buyer">
+                🛒 ผู้ซื้อ (Buyer)
+            </option>
+
+            <option value="seller">
+                🏪 ผู้ขาย (Seller)
+            </option>
+
+        </select>
+
+
+        <label>ชื่อ-นามสกุล</label>
+
+        <input
+            type="text"
+            id="fullname"
+            placeholder="กรอกชื่อ-นามสกุล"
+            required
+        >
+
+
+        <label>อีเมล</label>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="example@email.com"
+            required
+        >
+
+
+        <label>เบอร์โทรศัพท์</label>
+
+        <input
+            type="tel"
+            id="phone"
+            placeholder="08xxxxxxxx"
+            required
+        >
+
+
+        <label>รหัสผ่าน</label>
+
+        <input
+            type="password"
+            id="password"
+            placeholder="กรอกรหัสผ่าน"
+            minlength="6"
+            required
+        >
+
+
+        <label>ยืนยันรหัสผ่าน</label>
+
+        <input
+            type="password"
+            id="confirmPassword"
+            placeholder="กรอกรหัสผ่านอีกครั้ง"
+            minlength="6"
+            required
+        >
+
+
+        <button
+            type="submit"
+            class="register-button"
+        >
+            สมัครสมาชิก
+        </button>
+
+    </form>
+
+    <div class="login">
+
+        มีบัญชีอยู่แล้ว?
+
+        <a href="#">
+            เข้าสู่ระบบ
+        </a>
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <p>
+        © 2026 My Secondhand
+    </p>
+
+</footer>
+
+
+<script>
+
+document
+.getElementById("registerForm")
+.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const userType =
+        document.getElementById("userType").value;
+
+    const fullname =
+        document.getElementById("fullname").value;
+
+    const password =
+        document.getElementById("password").value;
+
+    const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+
+    if (password !== confirmPassword) {
+
+        alert("รหัสผ่านไม่ตรงกัน");
+
+        return;
+
+    }
+
+
+    if (userType === "buyer") {
+
+        alert(
+            "สมัครสมาชิกผู้ซื้อสำเร็จ\nยินดีต้อนรับ " +
+            fullname
+        );
+
+    }
+
+    else if (userType === "seller") {
+
+        alert(
+            "สมัครสมาชิกผู้ขายสำเร็จ\nยินดีต้อนรับ " +
+            fullname
+        );
+
+    }
+
+
+    document
+    .getElementById("registerForm")
+    .reset();
+
+});
+
+</script>
+
 
 </body>
 </html>
