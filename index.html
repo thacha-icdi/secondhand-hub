@@ -995,5 +995,98 @@ testConnection();
     });
 })();
 </script>
+    <script>
+(() => {
+    const container = document.querySelector("#products .products");
+    if (!container) return;
+
+    const message = document.createElement("p");
+    message.setAttribute("role", "status");
+
+    const refresh = document.createElement("button");
+    refresh.type = "button";
+    refresh.textContent = "โหลดสินค้าใหม่";
+    refresh.style.marginBottom = "20px";
+
+    container.before(refresh, message);
+
+    function addText(parent, tag, text, className) {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        if (className) element.className = className;
+        parent.appendChild(element);
+        return element;
+    }
+
+    async function loadShopProducts() {
+        refresh.disabled = true;
+        message.textContent = "กำลังโหลดสินค้า…";
+        container.replaceChildren();
+
+        try {
+            const { data: products, error } = await db
+                .from("products")
+                .select(
+                    "id,name,category,condition,description," +
+                    "price,shipping_cost,location,seller_contact,image_path"
+                )
+                .eq("status", "available")
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            message.textContent = products.length
+                ? "สินค้าพร้อมขาย " + products.length + " รายการ"
+                : "ยังไม่มีสินค้าที่ผ่านการอนุมัติ";
+
+            products.forEach(product => {
+                const card = document.createElement("article");
+                card.className = "product";
+
+                const photo = document.createElement("img");
+                photo.src = db.storage
+                    .from("product-images")
+                    .getPublicUrl(product.image_path).data.publicUrl;
+                photo.alt = product.name;
+                photo.loading = "lazy";
+                card.appendChild(photo);
+
+                addText(card, "h3", product.name);
+                addText(card, "p", "สภาพ: " + product.condition);
+                addText(
+                    card, "p",
+                    "฿" + Number(product.price).toLocaleString("th-TH"),
+                    "price"
+                );
+
+                const details = document.createElement("details");
+                const summary = document.createElement("summary");
+                summary.textContent = "ดูรายละเอียดสินค้า";
+                summary.style.cursor = "pointer";
+                details.appendChild(summary);
+
+                addText(details, "p", product.description, "details");
+                addText(details, "p", "หมวดหมู่: " + product.category);
+                addText(details, "p",
+                    "ค่าจัดส่ง: ฿" +
+                    Number(product.shipping_cost).toLocaleString("th-TH"));
+                addText(details, "p", "จังหวัด: " + product.location);
+                addText(details, "p",
+                    "ติดต่อผู้ขาย: " + product.seller_contact);
+
+                card.appendChild(details);
+                container.appendChild(card);
+            });
+        } catch (error) {
+            message.textContent = "โหลดสินค้าไม่สำเร็จ: " + error.message;
+        } finally {
+            refresh.disabled = false;
+        }
+    }
+
+    refresh.addEventListener("click", loadShopProducts);
+    loadShopProducts();
+})();
+</script>
 </body>
 </html>
