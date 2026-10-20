@@ -1145,5 +1145,237 @@ testConnection();
     loadShopProducts();
 })();
 </script>
+    <script>
+(() => {
+    const panel = document.createElement("section");
+    panel.className = "registration";
+    panel.hidden = true;
+
+    const heading = document.createElement("h2");
+    heading.textContent = "ตรวจค่าธรรมเนียมสำหรับ Admin";
+
+    const refresh = document.createElement("button");
+    refresh.type = "button";
+    refresh.textContent = "โหลดรายการค่าธรรมเนียม";
+
+    const message = document.createElement("p");
+    message.setAttribute("role", "status");
+
+    const list = document.createElement("div");
+    panel.append(heading, refresh, message, list);
+    document.querySelector("footer").before(panel);
+
+    let version = 0;
+
+    function addText(parent, tag, text) {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        parent.appendChild(element);
+        return element;
+    }
+
+    async function loadFees() {
+        const current = ++version;
+        panel.hidden = true;
+        list.replaceChildren();
+
+        try {
+            const { data: auth, error: authError } =
+                await db.auth.getUser();
+
+            if (current !== version) return;
+            if (authError || !auth.user) return;
+
+            const { data: admin, error: adminError } = await db
+                .from("admin_users")
+                .select("user_id")
+                .eq("user_id", auth.user.id)
+                .maybeSingle();
+
+            if (adminError) throw adminError;
+            if (current !== version || !admin) return;
+
+            panel.hidden = false;
+            refresh.disabled = true;
+            message.textContent = "กำลังโหลด…";
+
+            const { data: products, error } = await db
+                .from("products")
+                .select("id,name,seller_id,fee_amount,price")
+                .eq("status", "pending")
+                .eq("fee_paid", false)
+                .eq("fee_exempt", false)
+                .order("created_at", { ascending: true });
+
+            if (error) throw error;
+            if (current !== version) return;
+
+            message.textContent = products.length
+                ? "รอตรวจค่าธรรมเนียม " + products.length + " รายการ"
+                : "ยังไม่มีรายการรอตรวจค่าธรรมเนียม";
+
+            for (const product of products) {
+                if (current !== version) return;
+
+                const card = document.createElement("article");
+                card.style.cssText =
+                    "border:1px solid #ddd;padding:18px;" +
+                    "margin-top:18px;border-radius:10px;";
+
+                addText(card, "h3", product.name);
+                addText(card, "p", "รหัสสินค้า: " + product.id);
+
+                const amount = Number(product.fee_amount)
+                    .toLocaleString("th-TH", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                addText(card, "p",
+                    "ค่าธรรมเนียมที่ต้องได้รับ: ฿" + amount);
+
+                const { data: receipts, error: receiptError } =
+                    await db.from("fee_receipts")
+                        .select("id,slip_path,created_at")
+                        .eq("product_id", product.id)
+                        .eq("seller_id", product.seller_id)
+                        .order("created_at", { ascending: false });
+
+                if (receiptError) throw receiptError;
+                if (current !== version) return;
+
+                if (!receipts.length) {
+                    addText(card, "p", "ผู้ขายยังไม่ได้ส่งสลิป");
+                }
+
+                for (const receipt of receipts) {
+                    const view = document.createElement("button");
+                    view.type = "button";
+                    view.textContent = "ดูสลิป — " +
+                        new Date(receipt.created_at)
+                            .toLocaleString("th-TH");
+                    view.style.cssText =
+                        "display:block;margin:10px 0;";
+
+                    const image = document.createElement("img");
+                    image.alt = "หลักฐานค่าธรรมเนียม";
+                    image.hidden = true;
+                    image.style.cssText =
+                        "width:100%;max-height:600px;object-fit:contain;";
+
+                    view.addEventListener("click", async () => {
+                        view.disabled = true;
+
+                        try {
+                            const { data, error } = await db.storage
+                                .from("fee-slips")
+                                .createSignedUrl(receipt.slip_path, 300);
+
+                            if (error) throw error;
+
+                            image.src = data.signedUrl;
+                            image.hidden = false;
+                        } catch (error) {
+                            alert("เปิดสลิปไม่สำเร็จ: " + error.message);
+                        } finally {
+                            view.disabled = false;
+                        }
+                    });
+
+                    card.append(view, image);
+                }
+
+                if (receipts.length) {
+                    const label = document.createElement("label");
+                    label.style.cssText =
+                        "display:block;margin:18px 0;";
+
+                    const checked = document.createElement("input");
+                    checked.type = "checkbox";
+                    checked.style.width = "auto";
+
+                    label.append(
+                        checked,
+                        document.createTextNode(
+                            " ตรวจยอดเงินจริงในแอปธนาคารแล้ว " +
+                            "ได้รับครบ ฿" + amount +
+                            " และรายการโอนนี้ยังไม่เคยใช้กับสินค้าอื่น"
+                        )
+                    );
+
+                    const confirm = document.createElement("button");
+                    confirm.type = "button";
+                    confirm.textContent = "ยืนยันรับค่าธรรมเนียม";
+                    confirm.disabled = true;
+
+                    checked.addEventListener("change", () => {
+                        confirm.disabled = !checked.checked;
+                    });
+
+                    confirm.addEventListener("click", async () => {
+                        if (!checked.checked) return;
+                        confirm.disabled = true;
+                        checked.disabled = true;
+
+                        try {
+                            const { data, error } = await db
+                                .from("products")
+                                .update({ fee_paid: true })
+                                .eq("id", product.id)
+                                .eq("status", "pending")
+                                .eq("fee_paid", false)
+                                .eq("fee_exempt", false)
+                                .eq("price", product.price)
+                                .select("id");
+
+                            if (error) throw error;
+
+                            if (!data.length) {
+                                throw new Error(
+                                    "รายการเปลี่ยนแปลงแล้ว กรุณาโหลดใหม่");
+                            }
+
+                            alert(
+                                "ยืนยันค่าธรรมเนียมแล้ว " +
+                                "กรุณาตรวจสินค้าและกดอนุมัติในส่วน Admin"
+                            );
+
+                            document.getElementById("refreshPending")?.click();
+                            document.getElementById("refreshSellerPayments")?.click();
+
+                            await loadFees();
+                        } catch (error) {
+                            alert("บันทึกไม่สำเร็จ: " + error.message);
+                        } finally {
+                            checked.disabled = false;
+                            confirm.disabled = !checked.checked;
+                        }
+                    });
+
+                    card.append(label, confirm);
+                }
+
+                list.appendChild(card);
+            }
+        } catch (error) {
+            if (current !== version) return;
+            message.textContent = "โหลดไม่สำเร็จ: " + error.message;
+        } finally {
+            if (current === version) refresh.disabled = false;
+        }
+    }
+
+    refresh.addEventListener("click", loadFees);
+
+    db.auth.onAuthStateChange(() => {
+        version++;
+        panel.hidden = true;
+        list.replaceChildren();
+        setTimeout(loadFees, 0);
+    });
+
+    loadFees();
+})();
+</script>
 </body>
 </html>
