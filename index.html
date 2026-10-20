@@ -745,36 +745,42 @@ document.getElementById("registerForm")
         button.textContent = "สมัครสมาชิก";
     }
 });
-document
-.getElementById("loginForm")
-.addEventListener("submit", function(event) {
-
+document.getElementById("loginForm")
+.addEventListener("submit", async function(event) {
     event.preventDefault();
 
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+
     const email =
-        document.getElementById("loginEmail").value;
+        document.getElementById("loginEmail").value.trim();
 
-    const userType =
-        document.getElementById("loginType").value;
+    const password =
+        document.getElementById("loginPassword").value;
 
-    if (userType === "buyer") {
+    button.disabled = true;
+    button.textContent = "กำลังเข้าสู่ระบบ...";
 
-        alert(
-            "เข้าสู่ระบบสำเร็จ\n" +
-            "ยินดีต้อนรับผู้ซื้อ\n" +
-            email
-        );
+    try {
+        const { data, error } = await db.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
 
-    } else if (userType === "seller") {
+        if (error) throw error;
 
-        alert(
-            "เข้าสู่ระบบสำเร็จ\n" +
-            "ยินดีต้อนรับผู้ขาย\n" +
-            email
-        );
+        const name = data.user.user_metadata.fullname || email;
 
+        alert("เข้าสู่ระบบสำเร็จ\nยินดีต้อนรับ " + name);
+
+        document.getElementById("loginPassword").value = "";
+
+    } catch (error) {
+        alert("เข้าสู่ระบบไม่สำเร็จ: " + error.message);
+    } finally {
+        button.disabled = false;
+        button.textContent = "เข้าสู่ระบบ";
     }
-
 });
 </script>
 
