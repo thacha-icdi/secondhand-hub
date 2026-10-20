@@ -163,7 +163,201 @@
 nav {
     line-height: 2;
 }
-        
+        /* ปรับขนาดหน้าให้เหมาะกับทุกหน้าจอ */
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    overflow-wrap: anywhere;
+}
+
+img,
+video,
+iframe {
+    max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+    font: inherit;
+}
+
+input,
+select,
+textarea {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+}
+
+button {
+    min-height: 44px;
+    max-width: 100%;
+    white-space: normal;
+}
+
+header {
+    padding: 28px 16px;
+}
+
+header h1 {
+    font-size: clamp(26px, 5vw, 40px);
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+}
+
+nav a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    margin: 0;
+    padding: 8px 14px;
+}
+
+.welcome {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 16px;
+}
+
+.products {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit, minmax(min(100%, 240px), 1fr)
+    );
+    gap: 20px;
+    width: 100%;
+}
+
+.product {
+    width: 100%;
+    min-width: 0;
+    padding: 20px;
+}
+
+.product img {
+    display: block;
+    width: 100%;
+    height: 220px;
+    object-fit: contain;
+}
+
+.product details {
+    text-align: left;
+}
+
+.product summary {
+    min-height: 44px;
+    padding: 12px 0;
+}
+
+.registration {
+    width: calc(100% - 32px);
+    max-width: 720px;
+    margin: 28px auto;
+    padding: 28px;
+}
+
+.registration input:not([type="checkbox"]):not([type="radio"]),
+.registration select,
+.registration textarea {
+    width: 100%;
+}
+
+.registration input[type="file"] {
+    padding: 10px;
+}
+
+.registration input[type="checkbox"],
+.registration input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.registration article {
+    min-width: 0;
+}
+
+#imagePreview {
+    max-width: 100%;
+}
+
+footer {
+    padding: 24px 16px;
+}
+
+/* มือถือ */
+@media (max-width: 600px) {
+    header {
+        padding: 20px 12px;
+    }
+
+    nav {
+        gap: 4px;
+        padding: 8px;
+    }
+
+    nav a {
+        flex: 1 1 calc(33.333% - 8px);
+        padding: 8px 4px;
+        font-size: 14px;
+    }
+
+    .welcome {
+        padding: 24px 12px;
+    }
+
+    .products {
+        gap: 14px;
+    }
+
+    .registration {
+        width: calc(100% - 24px);
+        margin: 20px auto;
+        padding: 20px 16px;
+    }
+
+    .registration h2 {
+        font-size: 22px;
+    }
+
+    .registration article {
+        padding: 14px !important;
+    }
+
+    .registration article button {
+        display: block;
+        width: 100%;
+        margin: 10px 0 0 !important;
+    }
+
+    .register-button {
+        min-height: 48px;
+    }
+}
+
+/* หน้าจอเล็กมาก */
+@media (max-width: 360px) {
+    nav a {
+        flex-basis: calc(50% - 8px);
+    }
+
+    .registration {
+        padding: 16px 12px;
+    }
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
