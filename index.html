@@ -163,141 +163,7 @@
 nav {
     line-height: 2;
 }
-        const sellForm = document.getElementById("sellForm");
-const imageInput = document.getElementById("productImage");
-const imagePreview = document.getElementById("imagePreview");
-
-let selectedImageUrl = "";
-
-imageInput.addEventListener("change", function () {
-    if (selectedImageUrl) {
-        URL.revokeObjectURL(selectedImageUrl);
-        selectedImageUrl = "";
-    }
-
-    imagePreview.hidden = true;
-    imagePreview.removeAttribute("src");
-
-    const file = imageInput.files[0];
-
-    if (!file) return;
-
-    const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp"
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-        alert("กรุณาเลือกรูป JPG, PNG หรือ WebP");
-        imageInput.value = "";
-        return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-        alert("รูปภาพต้องมีขนาดไม่เกิน 5 MB");
-        imageInput.value = "";
-        return;
-    }
-
-    selectedImageUrl = URL.createObjectURL(file);
-    imagePreview.src = selectedImageUrl;
-    imagePreview.hidden = false;
-});
-
-sellForm.addEventListener("submit", function (event) {
-    event.preventDefault();
-
-    if (!sellForm.reportValidity()) return;
-
-    if (!selectedImageUrl) {
-        alert("กรุณาเลือกรูปสินค้า");
-        return;
-    }
-
-    const name =
-        document.getElementById("productName").value.trim();
-
-    const category =
-        document.getElementById("productCategory").value;
-
-    const condition =
-        document.getElementById("productCondition").value;
-
-    const description =
-        document.getElementById("productDescription").value.trim();
-
-    const price =
-        Number(document.getElementById("productPrice").value);
-
-    const shipping =
-        Number(document.getElementById("shippingCost").value);
-
-    const location =
-        document.getElementById("productLocation").value.trim();
-
-    const contact =
-        document.getElementById("sellerContact").value.trim();
-
-    if (!name || !description || !location || !contact) {
-        alert("กรุณากรอกข้อมูลให้ครบ โดยไม่ใช้เฉพาะช่องว่าง");
-        return;
-    }
-
-    const formatMoney = (amount) =>
-        amount.toLocaleString("th-TH", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        });
-
-    const card = document.createElement("div");
-    card.className = "product";
-
-    const photo = document.createElement("img");
-    photo.src = selectedImageUrl;
-    photo.alt = name;
-    card.appendChild(photo);
-
-    function addText(tag, text, className) {
-        const element = document.createElement(tag);
-        element.textContent = text;
-
-        if (className) element.className = className;
-
-        card.appendChild(element);
-    }
-
-    addText("h3", name);
-    addText("p", "หมวดหมู่: " + category);
-    addText("p", "สภาพ: " + condition);
-    addText("p", description, "details");
-    addText("p", "฿" + formatMoney(price), "price");
-
-    addText(
-        "p",
-        shipping === 0
-            ? "จัดส่งฟรี"
-            : "ค่าจัดส่ง ฿" + formatMoney(shipping)
-    );
-
-    addText("p", "จังหวัด: " + location);
-    addText("p", "ติดต่อ: " + contact);
-
-    document.querySelector("#products .products").prepend(card);
-
-    // เก็บ URL ของรูปไว้ให้การ์ดสินค้ายังแสดงภาพได้
-    selectedImageUrl = "";
-
-    sellForm.reset();
-    imagePreview.hidden = true;
-    imagePreview.removeAttribute("src");
-
-    document.getElementById("products").scrollIntoView({
-        behavior: "smooth"
-    });
-
-    alert("เพิ่มสินค้าในหน้าทดลองแล้ว");
-});
+        
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -982,6 +848,151 @@ testConnection();
     });
 
     loadPendingProducts();
+})();
+</script>
+    <script>
+(() => {
+    const form = document.getElementById("sellForm");
+    const imageInput = document.getElementById("productImage");
+    const preview = document.getElementById("imagePreview");
+    if (!form || !imageInput || !preview) return;
+
+    let previewUrl = "";
+    let submitting = false;
+
+    const imageTypes = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp"
+    };
+
+    function clearPreview() {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = "";
+        preview.hidden = true;
+        preview.removeAttribute("src");
+    }
+
+    function validateImage(file) {
+        if (!file || !imageTypes[file.type]) {
+            throw new Error("กรุณาเลือกรูป JPG, PNG หรือ WebP");
+        }
+
+        if (file.size === 0 || file.size > 5 * 1024 * 1024) {
+            throw new Error("รูปต้องมีขนาดไม่เกิน 5 MB และไม่ใช่ไฟล์ว่าง");
+        }
+    }
+
+    imageInput.addEventListener("change", () => {
+        clearPreview();
+        const file = imageInput.files[0];
+        if (!file) return;
+
+        try {
+            validateImage(file);
+            previewUrl = URL.createObjectURL(file);
+            preview.src = previewUrl;
+            preview.hidden = false;
+        } catch (error) {
+            alert(error.message);
+            imageInput.value = "";
+        }
+    });
+
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (submitting || !form.reportValidity()) return;
+
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+
+        submitting = true;
+        button.disabled = true;
+        button.textContent = "กำลังส่งสินค้า…";
+
+        try {
+            const { data: auth, error: authError } =
+                await db.auth.getUser();
+
+            if (authError || !auth.user) {
+                throw new Error("กรุณาเข้าสู่ระบบก่อนลงขายสินค้า");
+            }
+
+            const value = id =>
+                document.getElementById(id).value.trim();
+
+            const product = {
+                seller_id: auth.user.id,
+                name: value("productName"),
+                category: value("productCategory"),
+                condition: value("productCondition"),
+                description: value("productDescription"),
+                price: Number(value("productPrice")),
+                shipping_cost: Number(value("shippingCost") || "0"),
+                location: value("productLocation"),
+                seller_contact: value("sellerContact"),
+                status: "pending"
+            };
+
+            if (!product.name || !product.category ||
+                !product.condition || !product.description ||
+                !product.location || !product.seller_contact) {
+                throw new Error("กรุณากรอกข้อมูลสินค้าให้ครบ");
+            }
+
+            if (!Number.isFinite(product.price) ||
+                product.price <= 0 ||
+                !Number.isFinite(product.shipping_cost) ||
+                product.shipping_cost < 0) {
+                throw new Error("กรุณาตรวจสอบราคาและค่าจัดส่ง");
+            }
+
+            const file = imageInput.files[0];
+            validateImage(file);
+
+            const imagePath =
+                auth.user.id + "/" +
+                crypto.randomUUID() + "." +
+                imageTypes[file.type];
+
+            const { error: uploadError } = await db.storage
+                .from("product-images")
+                .upload(imagePath, file, {
+                    contentType: file.type,
+                    upsert: false
+                });
+
+            if (uploadError) {
+                throw new Error("อัปโหลดรูปไม่สำเร็จ: " +
+                    uploadError.message);
+            }
+
+            const { error: insertError } = await db
+                .from("products")
+                .insert({
+                    ...product,
+                    image_path: imagePath
+                });
+
+            if (insertError) {
+                throw new Error("บันทึกสินค้าไม่สำเร็จ: " +
+                    insertError.message);
+            }
+
+            form.reset();
+            clearPreview();
+
+            alert("ส่งสินค้าแล้ว กรุณารอ Admin ตรวจสอบก่อนแสดงขาย");
+
+            document.getElementById("refreshPending")?.click();
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            submitting = false;
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    });
 })();
 </script>
 </body>
