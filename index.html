@@ -815,5 +815,174 @@ async function testConnection() {
 
 testConnection();
 </script>
+    <script>
+(() => {
+    const panel = document.getElementById("adminPanel");
+    const message = document.getElementById("adminMessage");
+    const list = document.getElementById("pendingProducts");
+    const refresh = document.getElementById("refreshPending");
+
+    if (!panel || !message || !list || !refresh) return;
+
+    let loading = false;
+
+    function addText(parent, tag, text) {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        parent.appendChild(element);
+        return element;
+    }
+
+    async function loadPendingProducts() {
+        if (loading) return;
+        loading = true;
+        refresh.disabled = true;
+        panel.hidden = true;
+        list.replaceChildren();
+
+        try {
+            const { data: auth, error: authError } =
+                await db.auth.getUser();
+
+            if (authError || !auth.user) return;
+
+            const { data: admin, error: adminError } = await db
+                .from("admin_users")
+                .select("user_id")
+                .eq("user_id", auth.user.id)
+                .maybeSingle();
+
+            if (adminError) throw adminError;
+            if (!admin) return;
+
+            panel.hidden = false;
+            message.textContent = "กำลังโหลดรายการ…";
+
+            const { data: products, error } = await db
+                .from("products")
+                .select("*")
+                .eq("status", "pending")
+                .order("created_at", { ascending: true });
+
+            if (error) throw error;
+
+            message.textContent = products.length
+                ? "สินค้ารออนุมัติ " + products.length + " รายการ"
+                : "ยังไม่มีสินค้ารออนุมัติ";
+
+            products.forEach(product => {
+                const card = document.createElement("article");
+                card.style.cssText =
+                    "border:1px solid #ddd;padding:20px;" +
+                    "margin-top:20px;border-radius:10px;";
+
+                const image = document.createElement("img");
+                image.src = db.storage
+                    .from("product-images")
+                    .getPublicUrl(product.image_path).data.publicUrl;
+                image.alt = product.name;
+                image.style.cssText =
+                    "width:100%;max-height:280px;object-fit:contain;";
+                card.appendChild(image);
+
+                addText(card, "h3", product.name);
+                addText(card, "p", "หมวดหมู่: " + product.category);
+                addText(card, "p", "สภาพ: " + product.condition);
+                addText(card, "p", product.description);
+                addText(card, "p",
+                    "ราคา: ฿" + Number(product.price).toLocaleString("th-TH"));
+                addText(card, "p",
+                    "ค่าส่ง: ฿" + Number(product.shipping_cost).toLocaleString("th-TH"));
+                addText(card, "p", "สถานที่: " + product.location);
+                addText(card, "p", "ติดต่อผู้ขาย: " + product.seller_contact);
+
+                const note = document.createElement("textarea");
+                note.placeholder = "เหตุผลกรณีไม่อนุมัติ";
+                note.setAttribute("aria-label", "หมายเหตุการตรวจสินค้า");
+                note.maxLength = 1000;
+                note.style.cssText =
+                    "width:100%;min-height:80px;margin-bottom:12px;";
+                card.appendChild(note);
+
+                const approve = document.createElement("button");
+                approve.type = "button";
+                approve.textContent = "อนุมัติ";
+
+                const reject = document.createElement("button");
+                reject.type = "button";
+                reject.textContent = "ไม่อนุมัติ";
+                reject.style.cssText =
+                    "background:#c0392b;margin-left:10px;";
+
+                async function review(status) {
+                    const reviewNote = note.value.trim();
+
+                    if (status === "rejected" && !reviewNote) {
+                        alert("กรุณาระบุเหตุผลที่ไม่อนุมัติ");
+                        note.focus();
+                        return;
+                    }
+
+                    approve.disabled = true;
+                    reject.disabled = true;
+
+                    try {
+                        const { data, error } = await db
+                            .from("products")
+                            .update({
+                                status: status,
+                                review_note: reviewNote || null
+                            })
+                            .eq("id", product.id)
+                            .eq("status", "pending")
+                            .select("id");
+
+                        if (error) throw error;
+
+                        if (!data || data.length === 0) {
+                            alert("รายการเปลี่ยนแปลงแล้ว หรือไม่มีสิทธิ์แก้ไข");
+                        } else {
+                            alert(status === "available"
+                                ? "อนุมัติสินค้าแล้ว"
+                                : "ไม่อนุมัติสินค้าแล้ว");
+                        }
+
+                        await loadPendingProducts();
+                    } catch (error) {
+                        alert("บันทึกไม่สำเร็จ: " + error.message);
+                    } finally {
+                        approve.disabled = false;
+                        reject.disabled = false;
+                    }
+                }
+
+                approve.addEventListener("click",
+                    () => review("available"));
+                reject.addEventListener("click",
+                    () => review("rejected"));
+
+                card.append(approve, reject);
+                list.appendChild(card);
+            });
+        } catch (error) {
+            panel.hidden = false;
+            message.textContent = "โหลดไม่สำเร็จ: " + error.message;
+        } finally {
+            loading = false;
+            refresh.disabled = false;
+        }
+    }
+
+    refresh.addEventListener("click", loadPendingProducts);
+
+    db.auth.onAuthStateChange(() => {
+        panel.hidden = true;
+        list.replaceChildren();
+        setTimeout(loadPendingProducts, 0);
+    });
+
+    loadPendingProducts();
+})();
+</script>
 </body>
 </html>
