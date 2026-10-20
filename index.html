@@ -631,10 +631,21 @@ footer {
         เช่น สินค้าราคา 1,000 บาท ค่าธรรมเนียม 100 บาท
     </p>
 
-    <p>
-        <strong>โอนผ่านพร้อมเพย์: 0969939644</strong><br>
-        ชื่อผู้รับ: thacha ละวรรณา
+   <div id="paymentInfoBox"
+     style="
+        background:#f8f9fa;
+        border:1px solid #ddd;
+        padding:15px;
+        border-radius:8px;
+        margin:15px 0;
+     ">
+
+    <p style="margin:0; color:#555;">
+        🔒 ข้อมูลพร้อมเพย์จะถูกแสดง
+        หลังจากลงสินค้าและเข้าสู่ขั้นตอนชำระค่าธรรมเนียม
     </p>
+
+</div>
 
     <p>
         โปรดตรวจสอบชื่อผู้รับในแอปธนาคารก่อนโอน
@@ -770,12 +781,16 @@ footer {
     <section class="registration" id="sellerPayments" hidden>
     <h2>สินค้าของฉัน / ค่าธรรมเนียม</h2>
 
-    <p>
-        ผู้ขายทั่วไปชำระค่าธรรมเนียม 10%
-        ผ่านพร้อมเพย์ 0969939644
-        ชื่อ ธช ละวรรณา
-        แล้วส่งสลิปให้ตรงกับรายการสินค้า
-    </p>
+   <p>
+    ผู้ขายทั่วไปชำระค่าธรรมเนียม 10%
+    ของราคาสินค้า
+</p>
+
+<p>
+    🔒 ข้อมูลพร้อมเพย์จะแสดงเมื่อกด
+    “ชำระค่าธรรมเนียม”
+    ของสินค้าแต่ละรายการ
+</p>
 
     <p>
         บัญชี Admin ได้รับยกเว้นค่าธรรมเนียม
@@ -1570,6 +1585,67 @@ testConnection();
 
     loadFees();
 })();
+</script>
+    <script>
+function showPaymentInfo(productId, productName, feeAmount) {
+
+    // ถ้าเปิดอยู่แล้ว ให้ปิด
+    const oldBox = document.getElementById(
+        "payment-box-" + productId
+    );
+
+    if (oldBox) {
+        oldBox.remove();
+        return;
+    }
+
+    // สร้างกล่องข้อมูลชำระเงิน
+    const box = document.createElement("div");
+
+    box.id = "payment-box-" + productId;
+
+    box.style.cssText = `
+        margin-top:15px;
+        padding:20px;
+        background:#fff3cd;
+        border:1px solid #ffe69c;
+        border-radius:10px;
+    `;
+
+    box.innerHTML = `
+        <h3>💳 ชำระค่าธรรมเนียม</h3>
+
+        <p>
+            สินค้า:
+            <strong>${productName}</strong>
+        </p>
+
+        <p>
+            ยอดที่ต้องชำระ:
+            <strong>
+                ฿${Number(feeAmount).toLocaleString("th-TH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}
+            </strong>
+        </p>
+
+        <hr>
+
+        <p>
+            <strong>โอนผ่านพร้อมเพย์: 0969939644</strong>
+            <br>
+            ชื่อผู้รับ: thacha ละวรรณา
+        </p>
+
+        <p>
+            ⚠️ กรุณาตรวจสอบชื่อผู้รับในแอปธนาคาร
+            ก่อนทำรายการทุกครั้ง
+        </p>
+    `;
+
+    return box;
+}
 </script>
 </body>
 </html>
