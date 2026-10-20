@@ -684,57 +684,66 @@ sellForm.addEventListener("submit", function (event) {
 
 <script>
 
-document
-.getElementById("registerForm")
-.addEventListener("submit", function(event) {
-
+document.getElementById("registerForm")
+.addEventListener("submit", async function(event) {
     event.preventDefault();
 
-    const userType =
-        document.getElementById("userType").value;
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
 
-    const fullname =
-        document.getElementById("fullname").value;
-
-    const password =
-        document.getElementById("password").value;
-
+    const userType = document.getElementById("userType").value;
+    const fullname = document.getElementById("fullname").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const password = document.getElementById("password").value;
     const confirmPassword =
         document.getElementById("confirmPassword").value;
 
+    if (!fullname || !phone) {
+        alert("กรุณากรอกชื่อและเบอร์โทรศัพท์");
+        return;
+    }
 
     if (password !== confirmPassword) {
-
         alert("รหัสผ่านไม่ตรงกัน");
-
         return;
-
     }
 
+    button.disabled = true;
+    button.textContent = "กำลังสมัครสมาชิก...";
 
-    if (userType === "buyer") {
+    try {
+        const { data, error } = await db.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    fullname: fullname,
+                    phone: phone,
+                    user_type: userType
+                }
+            }
+        });
 
-        alert(
-            "สมัครสมาชิกผู้ซื้อสำเร็จ\nยินดีต้อนรับ " +
-            fullname
-        );
+        if (error) throw error;
 
+        if (data.session) {
+            alert("สมัครสมาชิกสำเร็จ");
+        } else {
+            alert(
+                "ส่งคำขอสมัครสมาชิกแล้ว\n" +
+                "กรุณาตรวจสอบอีเมลและโฟลเดอร์สแปม " +
+                "เพื่อยืนยันบัญชี"
+            );
+        }
+
+        form.reset();
+    } catch (error) {
+        alert("สมัครสมาชิกไม่สำเร็จ: " + error.message);
+    } finally {
+        button.disabled = false;
+        button.textContent = "สมัครสมาชิก";
     }
-
-    else if (userType === "seller") {
-
-        alert(
-            "สมัครสมาชิกผู้ขายสำเร็จ\nยินดีต้อนรับ " +
-            fullname
-        );
-
-    }
-
-
-    document
-    .getElementById("registerForm")
-    .reset();
-
 });
 document
 .getElementById("loginForm")
