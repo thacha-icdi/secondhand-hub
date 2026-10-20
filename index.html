@@ -2193,17 +2193,6 @@ testConnection();
     <script>
 function showPaymentInfo(productId, productName, feeAmount) {
 
-    // ถ้าเปิดอยู่แล้ว ให้ปิด
-    const oldBox = document.getElementById(
-        "payment-box-" + productId
-    );
-
-    if (oldBox) {
-        oldBox.remove();
-        return;
-    }
-
-    // สร้างกล่องข้อมูลชำระเงิน
     const box = document.createElement("div");
 
     box.id = "payment-box-" + productId;
@@ -2216,37 +2205,377 @@ function showPaymentInfo(productId, productName, feeAmount) {
         border-radius:10px;
     `;
 
-    box.innerHTML = `
-        <h3>💳 ชำระค่าธรรมเนียม</h3>
 
-        <p>
-            สินค้า:
-            <strong>${productName}</strong>
-        </p>
+    /* หัวข้อ */
 
-        <p>
-            ยอดที่ต้องชำระ:
-            <strong>
-                ฿${Number(feeAmount).toLocaleString("th-TH", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                })}
-            </strong>
-        </p>
+    const title = document.createElement("h3");
 
-        <hr>
+    title.textContent = "💳 ชำระค่าธรรมเนียม";
 
-        <p>
-            <strong>โอนผ่านพร้อมเพย์: 0969939644</strong>
-            <br>
-            ชื่อผู้รับ: thacha ละวรรณา
-        </p>
+    box.appendChild(title);
 
-        <p>
-            ⚠️ กรุณาตรวจสอบชื่อผู้รับในแอปธนาคาร
-            ก่อนทำรายการทุกครั้ง
-        </p>
+
+    /* ชื่อสินค้า */
+
+    const productText = document.createElement("p");
+
+    productText.textContent =
+        "สินค้า: " + productName;
+
+    box.appendChild(productText);
+
+
+    /* จำนวนเงิน */
+
+    const amount = document.createElement("p");
+
+    amount.style.fontWeight = "bold";
+
+    amount.textContent =
+        "ยอดที่ต้องชำระ: ฿" +
+        Number(feeAmount).toLocaleString(
+            "th-TH",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+    box.appendChild(amount);
+
+
+    /* เส้น */
+
+    box.appendChild(
+        document.createElement("hr")
+    );
+
+
+    /* PromptPay */
+
+    const promptPay = document.createElement("p");
+
+    promptPay.style.fontWeight = "bold";
+
+    promptPay.textContent =
+        "โอนผ่านพร้อมเพย์: 0969939644";
+
+    box.appendChild(promptPay);
+
+
+    /* ชื่อผู้รับ */
+
+    const recipient = document.createElement("p");
+
+    recipient.textContent =
+        "ชื่อผู้รับ: thacha ละวรรณา";
+
+    box.appendChild(recipient);
+
+
+    /* คำเตือน */
+
+    const warning = document.createElement("p");
+
+    warning.textContent =
+        "⚠️ กรุณาตรวจสอบชื่อผู้รับในแอปธนาคารก่อนทำรายการทุกครั้ง";
+
+    box.appendChild(warning);
+
+
+    /* ==========================
+       อัปโหลดสลิป
+       ========================== */
+
+    const slipTitle =
+        document.createElement("h4");
+
+    slipTitle.textContent =
+        "📤 อัปโหลดสลิปหลังโอนเงิน";
+
+    box.appendChild(slipTitle);
+
+
+    const slipInput =
+        document.createElement("input");
+
+    slipInput.type = "file";
+
+    slipInput.accept =
+        "image/jpeg,image/png,image/webp";
+
+    slipInput.style.cssText = `
+        display:block;
+        width:100%;
+        margin:10px 0;
     `;
+
+    box.appendChild(slipInput);
+
+
+    /* ปุ่มส่งสลิป */
+
+    const uploadButton =
+        document.createElement("button");
+
+    uploadButton.type = "button";
+
+    uploadButton.textContent =
+        "📤 ส่งสลิปให้ Admin ตรวจสอบ";
+
+    uploadButton.style.cssText = `
+        width:100%;
+        margin-top:10px;
+        background:#2980b9;
+    `;
+
+    box.appendChild(uploadButton);
+
+
+    /* ข้อความสถานะ */
+
+    const message =
+        document.createElement("p");
+
+    message.setAttribute(
+        "role",
+        "status"
+    );
+
+    box.appendChild(message);
+
+
+    /* ==========================
+       เมื่อกดส่งสลิป
+       ========================== */
+
+    uploadButton.addEventListener(
+        "click",
+        async function () {
+
+            const file =
+                slipInput.files[0];
+
+
+            /* ตรวจว่ามีไฟล์หรือไม่ */
+
+            if (!file) {
+
+                message.textContent =
+                    "❌ กรุณาเลือกไฟล์สลิป";
+
+                return;
+            }
+
+
+            /* ตรวจประเภทไฟล์ */
+
+            const allowedTypes = [
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            ];
+
+
+            if (!allowedTypes.includes(file.type)) {
+
+                message.textContent =
+                    "❌ รองรับเฉพาะ JPG, PNG และ WebP";
+
+                return;
+            }
+
+
+            /* จำกัด 5 MB */
+
+            if (
+                file.size === 0 ||
+                file.size > 5 * 1024 * 1024
+            ) {
+
+                message.textContent =
+                    "❌ ไฟล์ต้องมีขนาดไม่เกิน 5 MB";
+
+                return;
+            }
+
+
+            uploadButton.disabled = true;
+
+            uploadButton.textContent =
+                "กำลังส่งสลิป...";
+
+            message.textContent =
+                "กำลังอัปโหลดสลิป...";
+
+
+            try {
+
+                /* ตรวจ Login */
+
+                const {
+                    data: auth,
+                    error: authError
+                } =
+                    await db.auth.getUser();
+
+
+                if (
+                    authError ||
+                    !auth.user
+                ) {
+
+                    throw new Error(
+                        "กรุณาเข้าสู่ระบบใหม่"
+                    );
+
+                }
+
+
+                /* นามสกุลไฟล์ */
+
+                const extensions = {
+                    "image/jpeg": "jpg",
+                    "image/png": "png",
+                    "image/webp": "webp"
+                };
+
+
+                const extension =
+                    extensions[file.type];
+
+
+                /* สร้างชื่อไฟล์ */
+
+                const slipPath =
+                    auth.user.id +
+                    "/" +
+                    productId +
+                    "/" +
+                    crypto.randomUUID() +
+                    "." +
+                    extension;
+
+
+                /* ======================
+                   Upload เข้า Storage
+                   ====================== */
+
+                const {
+                    error: uploadError
+                } =
+                    await db.storage
+                        .from("fee-slips")
+                        .upload(
+                            slipPath,
+                            file,
+                            {
+                                contentType:
+                                    file.type,
+
+                                upsert: false
+                            }
+                        );
+
+
+                if (uploadError) {
+
+                    throw new Error(
+                        "อัปโหลดสลิปไม่สำเร็จ: " +
+                        uploadError.message
+                    );
+
+                }
+
+
+                /* ======================
+                   บันทึกลง fee_receipts
+                   ====================== */
+
+                const {
+                    error: insertError
+                } =
+                    await db
+                        .from("fee_receipts")
+                        .insert({
+
+                            product_id:
+                                productId,
+
+                            seller_id:
+                                auth.user.id,
+
+                            slip_path:
+                                slipPath
+
+                        });
+
+
+                if (insertError) {
+
+                    /*
+                    ถ้าบันทึก Database ไม่สำเร็จ
+                    ลบไฟล์ที่เพิ่ง Upload
+                    เพื่อไม่ให้มีไฟล์ค้าง
+                    */
+
+                    await db.storage
+                        .from("fee-slips")
+                        .remove([
+                            slipPath
+                        ]);
+
+
+                    throw new Error(
+                        "บันทึกข้อมูลสลิปไม่สำเร็จ: " +
+                        insertError.message
+                    );
+
+                }
+
+
+                /* ======================
+                   สำเร็จ
+                   ====================== */
+
+                message.textContent =
+                    "✅ ส่งสลิปแล้ว กรุณารอ Admin ตรวจสอบ";
+
+
+                slipInput.disabled = true;
+
+                uploadButton.textContent =
+                    "✅ ส่งสลิปแล้ว";
+
+
+                /* Refresh Admin */
+
+                document
+                    .getElementById(
+                        "refreshPending"
+                    )
+                    ?.click();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "❌ " +
+                    error.message;
+
+                uploadButton.disabled =
+                    false;
+
+                uploadButton.textContent =
+                    "📤 ส่งสลิปให้ Admin ตรวจสอบ";
+
+            }
+
+        }
+    );
+
 
     return box;
 }
