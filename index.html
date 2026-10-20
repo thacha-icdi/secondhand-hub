@@ -130,6 +130,174 @@
             padding: 20px;
             margin-top: 40px;
         }
+        .registration textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 16px;
+    resize: vertical;
+}
+
+.product img {
+    width: 100%;
+    height: 180px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f5f5f5;
+}
+
+.product h3,
+.product p {
+    overflow-wrap: anywhere;
+}
+
+.product .details {
+    text-align: left;
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+nav {
+    line-height: 2;
+}
+        const sellForm = document.getElementById("sellForm");
+const imageInput = document.getElementById("productImage");
+const imagePreview = document.getElementById("imagePreview");
+
+let selectedImageUrl = "";
+
+imageInput.addEventListener("change", function () {
+    if (selectedImageUrl) {
+        URL.revokeObjectURL(selectedImageUrl);
+        selectedImageUrl = "";
+    }
+
+    imagePreview.hidden = true;
+    imagePreview.removeAttribute("src");
+
+    const file = imageInput.files[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+        alert("กรุณาเลือกรูป JPG, PNG หรือ WebP");
+        imageInput.value = "";
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert("รูปภาพต้องมีขนาดไม่เกิน 5 MB");
+        imageInput.value = "";
+        return;
+    }
+
+    selectedImageUrl = URL.createObjectURL(file);
+    imagePreview.src = selectedImageUrl;
+    imagePreview.hidden = false;
+});
+
+sellForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    if (!sellForm.reportValidity()) return;
+
+    if (!selectedImageUrl) {
+        alert("กรุณาเลือกรูปสินค้า");
+        return;
+    }
+
+    const name =
+        document.getElementById("productName").value.trim();
+
+    const category =
+        document.getElementById("productCategory").value;
+
+    const condition =
+        document.getElementById("productCondition").value;
+
+    const description =
+        document.getElementById("productDescription").value.trim();
+
+    const price =
+        Number(document.getElementById("productPrice").value);
+
+    const shipping =
+        Number(document.getElementById("shippingCost").value);
+
+    const location =
+        document.getElementById("productLocation").value.trim();
+
+    const contact =
+        document.getElementById("sellerContact").value.trim();
+
+    if (!name || !description || !location || !contact) {
+        alert("กรุณากรอกข้อมูลให้ครบ โดยไม่ใช้เฉพาะช่องว่าง");
+        return;
+    }
+
+    const formatMoney = (amount) =>
+        amount.toLocaleString("th-TH", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+
+    const card = document.createElement("div");
+    card.className = "product";
+
+    const photo = document.createElement("img");
+    photo.src = selectedImageUrl;
+    photo.alt = name;
+    card.appendChild(photo);
+
+    function addText(tag, text, className) {
+        const element = document.createElement(tag);
+        element.textContent = text;
+
+        if (className) element.className = className;
+
+        card.appendChild(element);
+    }
+
+    addText("h3", name);
+    addText("p", "หมวดหมู่: " + category);
+    addText("p", "สภาพ: " + condition);
+    addText("p", description, "details");
+    addText("p", "฿" + formatMoney(price), "price");
+
+    addText(
+        "p",
+        shipping === 0
+            ? "จัดส่งฟรี"
+            : "ค่าจัดส่ง ฿" + formatMoney(shipping)
+    );
+
+    addText("p", "จังหวัด: " + location);
+    addText("p", "ติดต่อ: " + contact);
+
+    document.querySelector("#products .products").prepend(card);
+
+    // เก็บ URL ของรูปไว้ให้การ์ดสินค้ายังแสดงภาพได้
+    selectedImageUrl = "";
+
+    sellForm.reset();
+    imagePreview.hidden = true;
+    imagePreview.removeAttribute("src");
+
+    document.getElementById("products").scrollIntoView({
+        behavior: "smooth"
+    });
+
+    alert("เพิ่มสินค้าในหน้าทดลองแล้ว");
+});
     </style>
 </head>
 
@@ -145,7 +313,7 @@
     <a href="#products">สินค้า</a>
     <a href="#register">สมัครสมาชิก</a>
     <a href="#login">เข้าสู่ระบบ</a>
-    <a href="#">ขายสินค้า</a>
+    <a href="#sell">ขายสินค้า</a>
     <a href="#">ติดต่อเรา</a>
 </nav>
 
@@ -375,7 +543,124 @@
     </div>
 
 </section>
+<section class="registration" id="sell">
 
+    <h2>ลงขายสินค้า</h2>
+
+    <p>กรอกข้อมูลสินค้าและเลือกรูปภาพ</p>
+
+    <form id="sellForm">
+
+        <label for="productName">ชื่อสินค้า</label>
+        <input
+            type="text"
+            id="productName"
+            placeholder="เช่น กระเป๋ามือสอง"
+            maxlength="120"
+            required
+        >
+
+        <label for="productCategory">หมวดหมู่</label>
+        <select id="productCategory" required>
+            <option value="">-- เลือกหมวดหมู่ --</option>
+            <option>เครื่องประดับ</option>
+            <option>ของเก่า / ของโบราณ</option>
+            <option>กระเป๋า</option>
+            <option>เสื้อผ้า</option>
+            <option>อุปกรณ์อิเล็กทรอนิกส์</option>
+            <option>อื่น ๆ</option>
+        </select>
+
+        <label for="productCondition">สภาพสินค้า</label>
+        <select id="productCondition" required>
+            <option value="">-- เลือกสภาพสินค้า --</option>
+            <option>เหมือนใหม่</option>
+            <option>สภาพดี</option>
+            <option>มีร่องรอยการใช้งาน</option>
+            <option>มีตำหนิ / ต้องซ่อม</option>
+        </select>
+
+        <label for="productDescription">รายละเอียดและตำหนิสินค้า</label>
+        <textarea
+            id="productDescription"
+            rows="5"
+            maxlength="2000"
+            placeholder="ระบุยี่ห้อ ขนาด อายุการใช้งาน อุปกรณ์ที่ให้ และตำหนิ"
+            required
+        ></textarea>
+
+        <label for="productPrice">ราคาขาย (บาท)</label>
+        <input
+            type="number"
+            id="productPrice"
+            min="1"
+            max="100000000"
+            step="0.01"
+            placeholder="เช่น 1500"
+            required
+        >
+
+        <label for="shippingCost">ค่าจัดส่ง (บาท)</label>
+        <input
+            type="number"
+            id="shippingCost"
+            min="0"
+            max="100000"
+            step="0.01"
+            value="0"
+            required
+        >
+
+        <label for="productLocation">จังหวัดที่สินค้าอยู่</label>
+        <input
+            type="text"
+            id="productLocation"
+            placeholder="เช่น เชียงใหม่"
+            maxlength="100"
+            required
+        >
+
+        <label for="sellerContact">ช่องทางติดต่อผู้ขาย</label>
+        <input
+            type="text"
+            id="sellerContact"
+            placeholder="เช่น LINE ID หรือเบอร์โทรสำหรับติดต่อซื้อขาย"
+            maxlength="150"
+            required
+        >
+
+        <p style="font-size: 13px; color: #666;">
+            ช่องทางติดต่อนี้จะแสดงต่อผู้เข้าชมเว็บ
+        </p>
+
+        <label for="productImage">รูปสินค้า 1 รูป</label>
+        <input
+            type="file"
+            id="productImage"
+            accept="image/jpeg,image/png,image/webp"
+            required
+        >
+
+        <p style="font-size: 13px; color: #666;">
+            รองรับ JPG, PNG และ WebP ขนาดไม่เกิน 5 MB
+        </p>
+
+        <img
+            id="imagePreview"
+            alt="ตัวอย่างรูปสินค้า"
+            hidden
+            style="width:100%; max-height:280px;
+                   object-fit:contain; margin-top:15px;
+                   border-radius:8px;"
+        >
+
+        <button type="submit" class="register-button">
+            ลงขายสินค้า
+        </button>
+
+    </form>
+
+</section>
 <footer>
 
     <p>
