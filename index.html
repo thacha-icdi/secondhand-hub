@@ -299,6 +299,18 @@ sellForm.addEventListener("submit", function (event) {
     alert("เพิ่มสินค้าในหน้าทดลองแล้ว");
 });
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    const SUPABASE_URL = "https://hjvkqsvcuekutntwxvtd.supabase.co";
+
+    const SUPABASE_KEY = "sb_publishable_ohTXzkMRmFYerF6zN05VZg_lLTUY_Uw";
+
+    const db = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+</script>
 </head>
 
 <body>
